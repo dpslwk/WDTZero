@@ -72,7 +72,7 @@ WDTZeroCounter = _ewtcounter;            // SET Software EWT counter - used in I
   // Enable WDT early-warning interrupt
   NVIC_DisableIRQ(WDT_IRQn);
   NVIC_ClearPendingIRQ(WDT_IRQn);
-  NVIC_SetPriority(WDT_IRQn, 0); // Top priority
+  NVIC_SetPriority(WDT_IRQn, (1 << __NVIC_PRIO_BITS) - 1); // Lowest priority, one lower than serial
   NVIC_EnableIRQ(WDT_IRQn);
    
   WDT->INTENSET.bit.EW     = _w;       // Enable early warning interrupt - enable the multi cycle mechanism via WDT_Handler()
