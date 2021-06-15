@@ -30,15 +30,16 @@ void WDTZero::setup(unsigned int wdtzerosetup)
 {
   // One-time initialization of watchdog timer.
 
-  if (!wdtzerosetup) {                   // code 0x00 stops the watchdog
-    NVIC_DisableIRQ(WDT_IRQn);        // disable IRQ
-    NVIC_ClearPendingIRQ(WDT_IRQn);
-    WDT->CTRL.bit.ENABLE = 0;        // Stop watchdog now!
-    while(WDT->STATUS.bit.SYNCBUSY);
-  } else {
+  NVIC_DisableIRQ(WDT_IRQn); // disable IRQ
+  NVIC_ClearPendingIRQ(WDT_IRQn);
+  WDT->CTRL.bit.ENABLE = 0; // Stop watchdog now!
+  while (WDT->STATUS.bit.SYNCBUSY);
+
+  if (wdtzerosetup != WDT_OFF) { // code 0x00 stops the watchdog
     //  Split out the bits wdtzerosetup =>  _ewtcounter=CNT[3] _w=EWen[1]  _x=DIV[4]  _y=PER[4]  _z=EW[4]
 #ifdef DBGON
-    Serial.print(wdtzerosetup,HEX); Serial.print("= w/");
+    Serial.print(wdtzerosetup, HEX);
+    Serial.print("= w/");
 #endif
 
     _z = (char) (wdtzerosetup&0x000f);       // lower quad bits = EWoffset
@@ -49,9 +50,15 @@ void WDTZero::setup(unsigned int wdtzerosetup)
     WDTZeroCounter = _ewtcounter;            // SET Software EWT counter - used in ISR and Clear functions
 
 #ifdef DBGON
-     Serial.print(_w,HEX); Serial.print(" x/");Serial.print(_x,HEX); Serial.print(" y/");
-     Serial.print(_y,HEX); Serial.print(" z/");Serial.print(_z,HEX);
-     Serial.print("\nNew Ewtcounter:");Serial.print(_ewtcounter,HEX);
+    Serial.print(_w, HEX);
+    Serial.print(" x/");
+    Serial.print(_x, HEX);
+    Serial.print(" y/");
+    Serial.print(_y, HEX);
+    Serial.print(" z/");
+    Serial.print(_z, HEX);
+    Serial.print("\nNew Ewtcounter:");
+    Serial.print(_ewtcounter, HEX);
 #endif
 
     // Generic clock generator 2, divisor = 32 (2^(DIV+1))  = _x
@@ -62,7 +69,7 @@ void WDTZero::setup(unsigned int wdtzerosetup)
                         GCLK_GENCTRL_GENEN |
                         GCLK_GENCTRL_SRC_OSCULP32K |
                         GCLK_GENCTRL_DIVSEL;
-    while(GCLK->STATUS.bit.SYNCBUSY);
+    while (GCLK->STATUS.bit.SYNCBUSY);
     // WDT clock = clock gen 2
     GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID_WDT |
                         GCLK_CLKCTRL_CLKEN |
@@ -74,13 +81,13 @@ void WDTZero::setup(unsigned int wdtzerosetup)
     NVIC_SetPriority(WDT_IRQn, (1 << __NVIC_PRIO_BITS) - 1); // Lowest priority, one lower than serial
     NVIC_EnableIRQ(WDT_IRQn);
 
-    WDT->INTENSET.bit.EW     = _w;       // Enable early warning interrupt - enable the multi cycle mechanism via WDT_Handler()
+    WDT->INTENSET.bit.EW = _w;           // Enable early warning interrupt - enable the multi cycle mechanism via WDT_Handler()
     WDT->EWCTRL.bit.EWOFFSET = _z;       // Early Warning Interrupt Time Offset 0x6 - 512 clockcycles = 0.5 seconds => trigger ISR
-    WDT->CONFIG.bit.PER      = _y;       // Set period before hard WDT overflow <0x8 - 0xb>
-    WDT->CTRL.bit.WEN        = 0;          // Disable window mode
-    while(WDT->STATUS.bit.SYNCBUSY);       // Sync CTRL write
-    WDT->CTRL.bit.ENABLE     = 1;          // Start watchdog now!
-    while(WDT->STATUS.bit.SYNCBUSY);
+    WDT->CONFIG.bit.PER = _y;            // Set period before hard WDT overflow <0x8 - 0xb>
+    WDT->CTRL.bit.WEN = 0;               // Disable window mode
+    while (WDT->STATUS.bit.SYNCBUSY);     // Sync CTRL write
+    WDT->CTRL.bit.ENABLE = 1;            // Start watchdog now!
+    while (WDT->STATUS.bit.SYNCBUSY);
   }
 }
 
@@ -111,7 +118,7 @@ void WDT_Handler(void) {  // ISR for watchdog early warning, DO NOT RENAME!, nee
   } else {
     WDT->INTFLAG.bit.EW = 1;              // Clear INT EW Flag
     WDT->CLEAR.reg = WDT_CLEAR_CLEAR_KEY; // Clear WTD bit
-    while(WDT->STATUS.bit.SYNCBUSY);
+    while (WDT->STATUS.bit.SYNCBUSY);
   }
 }
 
@@ -124,3 +131,5 @@ void WDTZero::detachShutdown()
 {
   WDT_Shutdown = NULL;
 }
+
+WDTZero Watchdog;

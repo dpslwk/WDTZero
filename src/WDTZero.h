@@ -61,12 +61,14 @@ class WDTZero
     void setup(unsigned int wdtzerosetup);
     void attachShutdown(voidFuncPtr callback);
     void detachShutdown();
-  private:                      // wdtsetup varaible is split out in Hex[wxyx] as follows :
-     unsigned int _ewtcounter;  // w->  bit3:1 soft counter for early warning timer Cyclese = 2^[3:1] -> 1x,2x, ... 128x
-     char _w;                   // w -> bit0 : EWen = early warning interrupt enable : activates ISR for EW handling
-     char _x;                   // x -> 32Khz clock divisor DIV[3:0], 4 bits 0x1 - 0X4 -> Divisor = (2^(x+1)) i.e. x=4 -> DIV=32 CLK = 32Khz/32=1024Hz
-     char _y;                   // y -> hard counter PER[3:0], 4 bits, value 0x1 - 0XB -> clock cycle count
-     char _z;                   // z -> EW offset EW[3:0], 4 bits, valaue 0x1 - 0xB -> clock cycle count
+  private:                     // wdtsetup varaible is split out in Hex[wxyx] as follows :
+    unsigned int _ewtcounter;  // w->  bit3:1 soft counter for early warning timer Cyclese = 2^[3:1] -> 1x,2x, ... 128x
+    char _w;                   // w -> bit0 : EWen = early warning interrupt enable : activates ISR for EW handling
+    char _x;                   // x -> 32Khz clock divisor DIV[3:0], 4 bits 0x1 - 0X4 -> Divisor = (2^(x+1)) i.e. x=4 -> DIV=32 CLK = 32Khz/32=1024Hz
+    char _y;                   // y -> hard counter PER[3:0], 4 bits, value 0x1 - 0XB -> clock cycle count
+    char _z;                   // z -> EW offset EW[3:0], 4 bits, valaue 0x1 - 0xB -> clock cycle count
 };
+
+extern WDTZero Watchdog;
 
 #endif
